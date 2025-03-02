@@ -1,5 +1,6 @@
 import requests
-from flask import Flask
+from flask import Flask, request
+import time  # to add timestamp
 
 app = Flask(__name__)
 
@@ -8,7 +9,8 @@ MATCH_ID = "c57dc00a-7070-4068-8869-80c40dbbd009"
 
 @app.route("/")
 def get_score():
-    url = f"https://api.cricapi.com/v1/match_info?apikey={API_KEY}&id={MATCH_ID}"
+    timestamp = int(time.time())  # current time in seconds
+    url = f"https://api.cricapi.com/v1/match_info?apikey={API_KEY}&id={MATCH_ID}&t={timestamp}"
     response = requests.get(url)
     data = response.json()
 
@@ -25,7 +27,7 @@ def get_score():
     else:
         result = "Match data not available"
 
-    return result  # returning plain text instead of json
+    return result
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
