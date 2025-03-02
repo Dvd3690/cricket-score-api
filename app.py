@@ -1,6 +1,5 @@
 import requests
-import json
-from flask import Flask, jsonify
+from flask import Flask
 
 app = Flask(__name__)
 
@@ -15,21 +14,18 @@ def get_score():
 
     if "data" in data and data["data"]:
         match = data["data"]
-        team1 = match["teams"][0]
-        team2 = match["teams"][1]
-
         score = match.get("score", [])
+
         if len(score) >= 2:
             score1 = f"{score[0]['inning']} {score[0]['r']}/{score[0]['w']} ({score[0]['o']} ov)"
             score2 = f"{score[1]['inning']} {score[1]['r']}/{score[1]['w']} ({score[1]['o']} ov)"
             result = f"{score1} vs {score2} - {match['status']}"
         else:
-            result = f"{team1} vs {team2} - {match['status']} (Score not available)"
-
+            result = f"{match['teams'][0]} vs {match['teams'][1]} - {match['status']} (Score not available)"
     else:
         result = "Match data not available"
 
-    return jsonify({"score": result})
+    return result  # returning plain text instead of json
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
