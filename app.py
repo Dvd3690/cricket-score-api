@@ -1,34 +1,33 @@
-import requests
-from flask import Flask, request
-import time  # to add timestamp
+from flask import Flask, request  
+import requests  
 
-app = Flask(__name__)
+app = Flask(__name__)  
 
-API_KEY = "22e06cd0-331e-4af4-ba7f-b4e2f0260520"
-MATCH_ID = "c57dc00a-7070-4068-8869-80c40dbbd009"
+API_KEY = "22e06cd0-331e-4af4-ba7f-b4e2f0260520"  
+MATCH_ID = "445e4eac-2a9c-4810-afd4-77197aeed7c3"  
 
-@app.route("/")
-def get_score():
-    timestamp = int(time.time())  # current time in seconds
-    url = f"https://api.cricapi.com/v1/match_info?apikey={API_KEY}&id={MATCH_ID}&t={timestamp}"
-    response = requests.get(url)
-    data = response.json()
+@app.route("/")  
+def get_score():  
+    url = f"https://api.cricketdata.org/match/{MATCH_ID}"  
+    headers = {"X-Api-Key": API_KEY}  
+    response = requests.get(url, headers=headers)  
+    data = response.json()  
 
-    if "data" in data and data["data"]:
-        match = data["data"]
-        score = match.get("score", [])
+    if "status" in data and data["status"] == "success":  
+        try:  
+            match = data["match"]  
+            team1 = match["team_1"]["name"]  
+            team2 = match["team_2"]["name"]  
+            score1 = match["team_1"]["scores"]  
+            score2 = match["team_2"]["scores"]  
+            overs1 = match["team_1"]["overs"]  
+            overs2 = match["team_2"]["overs"]  
+            status = match["status_note"]  
 
-        if len(score) >= 2:
-            score1 = f"{score[0]['inning']} {score[0]['r']}/{score[0]['w']} ({score[0]['o']} ov)"
-            score2 = f"{score[1]['inning']} {score[1]['r']}/{score[1]['w']} ({score[1]['o']} ov)"
-            result = f"{score1} vs {score2} - {match['status']}"
-        else:
-            result = f"{match['teams'][0]} vs {match['teams'][1]} - {match['status']} (Score not available)"
-    else:
-        result = "Match data not available"
+            return f"{team1} {score1}/{overs1} - {team2} {score2}/{overs2} | {status}"  
+        except KeyError:  
+            return "score not available yet"  
+    return "error fetching score"  
 
-    return result
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
-    
+if __name__ == "__main__":  
+    app.run(host="0.0.0.0", port=5000)  
