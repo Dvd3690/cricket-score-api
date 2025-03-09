@@ -19,7 +19,6 @@ def get_match():
         }
         response = requests.get(BASE_URL, headers=headers, timeout=5)
         data = response.json()
-
         return jsonify(data)
 
     except requests.exceptions.RequestException as e:
