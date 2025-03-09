@@ -1,37 +1,39 @@
-from flask import Flask, jsonify  
-import requests  
+from flask import Flask, request, jsonify
+import requests
 
-app = Flask(__name__)  
+app = Flask(__name__)
 
-API_KEY = "22e06cd0-331e-4af4-ba7f-b4e2f0260520"  
-MATCH_ID = "445e4eac-2a9c-4810-afd4-77197aeed7c3"  
+API_KEY = "22e06cd0-331e-4af4-ba7f-b4e2f0260520"
+BASE_URL = "https://api.cricketdata.org/match/"
 
-@app.route("/")  
-def get_score():  
-    url = f"https://api.cricketdata.org/match/{MATCH_ID}"  
-    headers = {"X-Api-Key": API_KEY}  
+@app.route("/match", methods=["GET"])
+def get_match():
+    match_id = request.args.get("id")
+    if not match_id:
+        return jsonify({"error": "match id required"}), 400
 
-    try:  
-        response = requests.get(url, headers=headers)  
-        response.raise_for_status()  # raises error if request fails  
-        data = response.json()  
+    url = f"{BASE_URL}{match_id}?apikey={API_KEY}"
+    try:
+        response = requests.get(url, timeout=5)
+        data = response.json()
 
-        if "status" in data and data["status"] == "success":  
-            match = data.get("match", {})  
-            team1 = match.get("team_1", {}).get("name", "Unknown")  
-            team2 = match.get("team_2", {}).get("name", "Unknown")  
-            score1 = match.get("team_1", {}).get("scores", "0/0")  
-            score2 = match.get("team_2", {}).get("scores", "0/0")  
-            overs1 = match.get("team_1", {}).get("overs", "0.0")  
-            overs2 = match.get("team_2", {}).get("overs", "0.0")  
-            status = match.get("status_note", "No update")  
+        if "error" in data:
+            return jsonify({"error": "invalid match id or data not available"}), 404
 
-            return f"{team1} {score1} ({overs1} ov) - {team2} {score2} ({overs2} ov) | {status}"  
+        match_info = data.get("match", {})
+        teams = match_info.get("teams", "TBC vs TBC")
+        status = match_info.get("status", "No update")
+        score = match_info.get("score", "Score not available")
 
-        return "match data not available yet"  
+        return jsonify({
+            "match": teams,
+            "status": status,
+            "score": score
+        })
 
-    except requests.exceptions.RequestException as e:  
-        return f"error fetching score: {e}"  
+    except requests.exceptions.RequestException:
+        return jsonify({"error": "failed to fetch match data"}), 500
 
-if __name__ == "__main__":  
-    app.run(host="0.0.0.0", port=5000)  
+if __name__ == "__main__":
+    app.run(debug=True)
+    
