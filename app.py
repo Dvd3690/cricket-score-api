@@ -14,10 +14,13 @@ def home():
 @app.route("/match", methods=["GET"])
 def get_match():
     try:
-        response = requests.get(BASE_URL, timeout=5)
+        headers = {
+            "User-Agent": "Mozilla/5.0"
+        }
+        response = requests.get(BASE_URL, headers=headers, timeout=5)
         data = response.json()
 
-        return jsonify(data)  # show raw response
+        return jsonify(data)
 
     except requests.exceptions.RequestException as e:
         return jsonify({"error": "failed to fetch match data", "details": str(e)}), 500
