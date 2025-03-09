@@ -17,26 +17,11 @@ def get_match():
         response = requests.get(BASE_URL, timeout=5)
         data = response.json()
 
-        if response.status_code != 200 or "error" in data:
-            return jsonify({"error": "invalid match id or data not available"}), 404
+        return jsonify(data)  # show raw response
 
-        match_info = data.get("match", {})
-        teams = match_info.get("teams", "TBC vs TBC")
-        status = match_info.get("status", "No update")
-
-        score_info = match_info.get("score", {})
-        score = score_info.get("current", "Score not available")
-        overs = score_info.get("overs", "N/A")
-        wickets = score_info.get("wickets", "N/A")
-
-        return jsonify({
-            "match": teams,
-            "status": status,
-            "score": f"{score}/{wickets} in {overs} overs"
-        })
-
-    except requests.exceptions.RequestException:
-        return jsonify({"error": "failed to fetch match data"}), 500
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": "failed to fetch match data", "details": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=10000)
+    
